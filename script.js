@@ -7,6 +7,21 @@ var tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 var ids = 0;
 
+let ctrlKeyPressed = false;
+var duplicate_lat_lng;
+
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Control" || event.key === "Meta") {
+    ctrlKeyPressed = true;
+  }
+});
+
+document.addEventListener("keyup", function (event) {
+  if (event.key === "Control" || event.key === "Meta") {
+    ctrlKeyPressed = false;
+  }
+});
+
 async function processData() {
   try {
     const fetchedData = await fetch("france.geojson");
@@ -59,6 +74,16 @@ async function processData() {
           fill: false,
         }).addTo(map);
         bouding_rectangle._path.classList.add(`dragged_rectangle_${this_id}`);
+      });
+    });
+
+    geojsonLayer.eachLayer(function (path) {
+      path.on("click", function (event) {
+        if (ctrlKeyPressed) {
+          var originalLatLngs = this.getLatLngs();
+          console.log(originalLatLngs);
+          L.polygon(newLatLngs).addTo(map);
+        }
       });
     });
   } catch (error) {
