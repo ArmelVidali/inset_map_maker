@@ -303,6 +303,9 @@ let ctrl_div = document.querySelector(
 ctrl_div.appendChild(bigger_btn);
 ctrl_div.appendChild(smaller_btn);
 
+let download_button = `<button class="button-13" id="download_btn" role="button">Download</button>`;
+ctrl_div.innerHTML += download_button;
+
 document.addEventListener("keydown", function (event) {
   if (event.key === "Control" || event.key === "Meta") {
     ctrlKeyPressed = true;
@@ -330,7 +333,7 @@ async function processData() {
       test: "test",
       style: {
         weight: 1,
-        fillOpacity: 0.7,
+        fillOpacity: 0.9,
         color: "white",
         dashArray: "3",
       },
@@ -397,7 +400,7 @@ async function processData() {
             draggable: true,
             style: {
               weight: 1,
-              fillOpacity: 0.7,
+              fillOpacity: 0.9,
               color: "white",
               dashArray: "3",
             },
@@ -410,7 +413,7 @@ async function processData() {
             draggable: true,
             style: {
               weight: 1,
-              fillOpacity: 0.7,
+              fillOpacity: 0.9,
               color: "white",
               dashArray: "3",
             },
@@ -446,7 +449,7 @@ async function processData() {
             draggable: false,
             style: {
               weight: 1,
-              fillOpacity: 0.7,
+              fillOpacity: 0.9,
               color: "white",
               dashArray: "3",
             },
@@ -478,5 +481,30 @@ var bounds = [
 ];
 // zoom the map to the rectangle bounds
 map.fitBounds(bounds);
+let download_btn = document.getElementById("download_btn");
+
+download_btn.addEventListener("click", function () {
+  let output_feat = {
+    type: "FeatureCollection",
+    features: [], // Initialize an empty array for features
+  };
+  map.eachLayer(function (layer) {
+    if (layer instanceof L.Path) {
+      output_feat.features.push(layer.feature);
+    }
+  });
+  download_data(output_feat);
+});
+
+function download_data(data) {
+  const jsonString = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonString], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "filename";
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 },{"@turf/turf":2}]},{},[3]);
