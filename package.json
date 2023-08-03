@@ -1,0 +1,14 @@
+{
+  "name": "inset_map_maker",
+  "version": "1.0.0",
+  "description": "Create an inset map using a Leaflet web UI",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@turf/turf": "^6.5.0"
+  }
+}
