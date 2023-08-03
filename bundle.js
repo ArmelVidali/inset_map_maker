@@ -332,10 +332,10 @@ async function processData() {
       draggable: false,
       test: "test",
       style: {
-        weight: 1,
+        weight: 0.2,
         fillOpacity: 0.9,
-        color: "white",
-        dashArray: "3",
+        color: "black",
+        fillColor: "white",
       },
     }).addTo(map);
 
@@ -399,10 +399,10 @@ async function processData() {
           {
             draggable: true,
             style: {
-              weight: 1,
+              weight: 0.2,
               fillOpacity: 0.9,
-              color: "white",
-              dashArray: "3",
+              color: "black",
+              fillColor: "white",
             },
           }
         ).addTo(map);
@@ -412,10 +412,10 @@ async function processData() {
           {
             draggable: true,
             style: {
-              weight: 1,
+              weight: 0.2,
               fillOpacity: 0.9,
-              color: "white",
-              dashArray: "3",
+              color: "black",
+              fillColor: "white",
             },
           }
         ).addTo(map);
@@ -448,10 +448,10 @@ async function processData() {
           var new_path = L.geoJSON(this.toGeoJSON(), {
             draggable: true,
             style: {
-              weight: 1,
+              weight: 0.2,
               fillOpacity: 0.9,
-              color: "white",
-              dashArray: "3",
+              color: "black",
+              fillColor: "white",
             },
           }).addTo(map);
         }
