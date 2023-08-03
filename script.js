@@ -50,7 +50,7 @@ async function processData() {
     var i = 0;
 
     let geojsonLayer = L.geoJSON(data, {
-      draggable: true,
+      draggable: false,
       test: "test",
       style: {
         weight: 1,
@@ -166,24 +166,21 @@ async function processData() {
     geojsonLayer.eachLayer(function (path) {
       path.on("click", function (event) {
         if (ctrlKeyPressed) {
-          let new_path = L.geoJSON(this.toGeoJSON(), {
-            draggable: false,
+          var new_path = L.geoJSON(this.toGeoJSON(), {
+            draggable: true,
             style: {
               weight: 1,
               fillOpacity: 0.9,
               color: "white",
               dashArray: "3",
             },
-          })
-            .addTo(map)
-            .bringToBack();
+          }).addTo(map);
         }
-        clicked_path = path;
+        bind_drag(new_path, false);
+        clicked_path = new_path;
         console.log("click ", clicked_path);
       });
     });
-
-    bind_drag(geojsonLayer, true);
     document.getElementById("bigger").addEventListener("click", function () {
       redraw(clicked_path, "in");
     });
