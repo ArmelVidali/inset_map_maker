@@ -24,7 +24,7 @@ let ctrl_div = document.querySelector(
 ctrl_div.appendChild(bigger_btn);
 ctrl_div.appendChild(smaller_btn);
 
-let download_button = `<button class="button-13" id="download_btn" role="button">Download</button>`;
+let download_button = `<button class="btn" id="download_btn" role="button">Download</button>`;
 ctrl_div.innerHTML += download_button;
 
 document.addEventListener("keydown", function (event) {
@@ -62,11 +62,13 @@ async function processData() {
 
     geojsonLayer.eachLayer(function (path) {
       path.feature.id = i++;
+      path._path.classList.add("original_path");
     });
 
     function bind_drag(feature, collection = false) {
       feature.eachLayer(function (path) {
         path.on("dragend", function (event) {
+          this.setStyle({ fillColor: "white" });
           let flag = false;
           var bounds = path._bounds;
 
@@ -110,8 +112,6 @@ async function processData() {
       document
         .querySelectorAll(`[class*="dragged_rectangle_${path_id}"]`)[0]
         .remove();
-      console.log(path);
-      console.log(path_id);
       path.remove();
 
       if (scale == "in") {
@@ -161,6 +161,28 @@ async function processData() {
       rescaled_path.addEventListener("click", function () {
         clicked_path = rescaled_path;
       });
+      if (
+        Array.from(
+          rescaled_path._layers[Object.keys(rescaled_path._layers)]._path
+            .classList
+        ).includes("clicked")
+      ) {
+        rescaled_path._layers[
+          Object.keys(rescaled_path._layers)
+        ]._path.classList.remove("clicked");
+      } else {
+        map.eachLayer(function (path) {
+          if (path instanceof L.Path) {
+            if (Array.from(path._path.classList).includes("clicked")) {
+              console.log(path);
+              path._path.classList.remove("clicked");
+            }
+          }
+        });
+        rescaled_path._layers[
+          Object.keys(rescaled_path._layers)
+        ]._path.classList.add("clicked");
+      }
     }
 
     geojsonLayer.eachLayer(function (path) {
@@ -172,13 +194,37 @@ async function processData() {
               weight: 0.2,
               fillOpacity: 0.9,
               color: "black",
-              fillColor: "white",
+              fillColor: "orange",
             },
           }).addTo(map);
+          bind_drag(new_path, false);
+          clicked_path = new_path;
+
+          new_path.addEventListener("click", function () {
+            clicked_path = new_path;
+            if (
+              Array.from(
+                new_path._layers[Object.keys(new_path._layers)]._path.classList
+              ).includes("clicked")
+            ) {
+              new_path._layers[
+                Object.keys(new_path._layers)
+              ]._path.classList.remove("clicked");
+            } else {
+              map.eachLayer(function (path) {
+                if (path instanceof L.Path) {
+                  if (Array.from(path._path.classList).includes("clicked")) {
+                    console.log(path);
+                    path._path.classList.remove("clicked");
+                  }
+                }
+              });
+              new_path._layers[
+                Object.keys(new_path._layers)
+              ]._path.classList.add("clicked");
+            }
+          });
         }
-        bind_drag(new_path, false);
-        clicked_path = new_path;
-        console.log("click ", clicked_path);
       });
     });
     document.getElementById("bigger").addEventListener("click", function () {
