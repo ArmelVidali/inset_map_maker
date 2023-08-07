@@ -4,6 +4,7 @@ var map = L.map("map", { zoomControl: false }).setView(
   [46.603354, 1.888334],
   6
 );
+
 map.doubleClickZoom.disable();
 var tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
