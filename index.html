@@ -9,7 +9,55 @@
     <script src="https://cdn.jsdelivr.net/npm/leaflet.path.drag@0.0.6/src/Path.Drag.min.js"></script>
   </head>
   <body>
-    <div id="map" style="width: 100%; height: 800px"></div>
+    <div id="map">
+      <div class="container" >
+        <div class="card">
+          <div class="header">
+            <h3><kbd class = kdb_elem >Ctrl</kbd> + <kbd class = kdb_elem >Left Click</kbd> to duplicate a shape.</h3>   
+            <h3><kbd class = kdb_elem >Left Click</kbd> To drag a duplicated shape.</h3>   
+          </div>
+          <div class="body">
+            <ul id = "menu_ul">
+              <li id = "file_input">
+                <img
+                  src="img\upload.svg"
+                  alt="upload"
+                  style="height: 15px; width: 15px"
+                  
+                  class="menu-btn"
+                />
+                Load data
+              </li>
+              <li>
+                <img
+                src="img\minus.svg"
+                alt="upload"
+                style="height: 15px; width: 15px"
+                id = smaller
+                class="menu-btn"
+              /> Rescale selected element <img
+              src="img\plus.svg"
+              alt="upload"
+              style="height: 15px; width:15px "
+              id = bigger
+              class="menu-btn"
+            />
+                  
+                </button>
+              </li>
+              <li id = "download_btn">
+                <img
+                  src="img\download.svg"
+                  alt="upload"
+                  style="height: 15px; width: 15px"
+                  class="menu-btn"
+                /> Download (GeoJSON)
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
     <script src="bundle.js"></script>
   </body>
 </html>
