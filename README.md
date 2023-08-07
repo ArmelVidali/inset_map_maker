@@ -1,5 +1,7 @@
 # Inset map maker
 
+[beta version] : Works with json/geojson polygons only (for now !)
+
 Create an inset map using a Leaflet web UI
 
 Click and drag a feature to create a bouding box around it, optionnaly resize the feature size.
