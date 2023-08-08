@@ -1,4 +1,4 @@
-export function set_upload() {
+function set_upload() {
   let fileInput = document.getElementById("file_input");
   fileInput.addEventListener("click", () => {
     const fileInput = document.createElement("input");
@@ -41,7 +41,7 @@ export function set_upload() {
   });
 }
 
-export function set_download() {
+function set_download() {
   let fileInput = document.getElementById("file_input");
   fileInput.addEventListener("change", (event) => {
     const selectedFile = event.target.files[0];
@@ -84,6 +84,7 @@ export function set_download() {
 }
 
 function add_data(data) {
+  console.log(lf_map);
   var i = 0;
 
   let geojsonLayer = L.geoJSON(data, {
@@ -95,13 +96,13 @@ function add_data(data) {
       color: "black",
       fillColor: "white",
     },
-  }).addTo(map);
+  }).addTo(lf_map);
 
   geojsonLayer.eachLayer(function (path) {
     path.feature.id = i++;
   });
 
-  /* geojsonLayer.eachLayer(function (path) {
+  geojsonLayer.eachLayer(function (path) {
     path.on("click", function (event) {
       if (ctrlKeyPressed) {
         var new_path = L.geoJSON(this.toGeoJSON(), {
@@ -121,5 +122,5 @@ function add_data(data) {
         set_clicked_path(new_path);
       }
     });
-  }); */
+  });
 }

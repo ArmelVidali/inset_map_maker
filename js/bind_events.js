@@ -1,4 +1,4 @@
-export function rescale(layer, scale) {
+function rescale(layer, scale) {
   var scale_factor;
   if (scale == "in") {
     scale_factor = 1.1;
@@ -18,8 +18,7 @@ export function rescale(layer, scale) {
     }
   ).getLayers()[0].feature.geometry.coordinates;
 }
-
-export function set_clicked_path(path) {
+function set_clicked_path(path) {
   path.addEventListener("click", function () {
     clicked_path = path;
     if (path._path.classList.contains("clicked")) {
@@ -37,7 +36,7 @@ export function set_clicked_path(path) {
   });
 }
 
-export function bind_drag(feature, collection = false) {
+function bind_drag(feature, collection = false) {
   feature.eachLayer(function (path) {
     path.on("dragend", function (event) {
       this.setStyle({ fillColor: "white" });
@@ -70,7 +69,7 @@ export function bind_drag(feature, collection = false) {
   });
 }
 
-export function set_key_press() {
+function set_key_press() {
   document.addEventListener("keydown", function (event) {
     if (event.key === "Control" || event.key === "Meta") {
       ctrlKeyPressed = true;
@@ -92,7 +91,7 @@ export function set_key_press() {
  * @param {path} Leafletpath
  * @param {scale} str : in or out
  */
-export function redraw(path, scale) {
+function redraw(path, scale) {
   var path_id = path.feature.id;
 
   document
