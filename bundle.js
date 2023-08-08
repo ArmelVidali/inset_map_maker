@@ -4400,6 +4400,7 @@ function processData(data) {
   geojsonLayer.eachLayer(function (path) {
     path.feature.id = i++;
     path._path.classList.add("original_path");
+    console.log("geojson layer", path);
   });
 
   function bind_drag(feature, collection = false) {
@@ -4498,6 +4499,7 @@ function processData(data) {
       Object.keys(rescaled_path._layers)
     ]._path.classList.add("clicked");
     clicked_path = rescaled_path;
+    console.log("rescaled path", rescaled_path.getLayers());
 
     rescaled_path.addEventListener("click", function () {
       clicked_path = rescaled_path;
@@ -4539,6 +4541,7 @@ function processData(data) {
         }).addTo(map);
         bind_drag(new_path, false);
         clicked_path = new_path;
+        console.log("duplicateed path", new_path);
 
         new_path.addEventListener("click", function () {
           clicked_path = new_path;

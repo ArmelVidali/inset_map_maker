@@ -1,5 +1,7 @@
+import { redraw, rescale, set_clicked_path } from "./bind_events";
 const turf = require("@turf/turf");
 const Swal = require("sweetalert2");
+
 var map = L.map("map", { zoomControl: false }).setView(
   [46.603354, 1.888334],
   6
@@ -103,6 +105,7 @@ function processData(data) {
   geojsonLayer.eachLayer(function (path) {
     path.feature.id = i++;
     path._path.classList.add("original_path");
+    console.log("geojson layer", path);
   });
 
   function bind_drag(feature, collection = false) {
@@ -142,90 +145,36 @@ function processData(data) {
     });
   }
 
+  /**
+   * Rescales a path by 1.1 or 0.9, redraws the boudng rectangle around it and set class name
+   * @param {leaflet path} path
+   * @param {string} scale
+   */
   function redraw(path, scale) {
-    try {
-      var path_id = path._layers[Object.keys(path._layers)].feature.id;
-    } catch {}
-    try {
-      var path_id = path.feature.id;
-    } catch {}
+    var path_id = path.feature.id;
+
     document
       .querySelectorAll(`[class*="dragged_rectangle_${path_id}"]`)[0]
       .remove();
+
     path.remove();
 
-    if (scale == "in") {
-      var rescaled_path = L.geoJSON(
-        turf.transformScale(path.toGeoJSON(), 1.1),
-        {
-          draggable: true,
-          style: {
-            weight: 0.2,
-            fillOpacity: 0.9,
-            color: "black",
-            fillColor: "white",
-          },
-        }
-      ).addTo(map);
-    } else {
-      var rescaled_path = L.geoJSON(
-        turf.transformScale(path.toGeoJSON(), 0.9),
-        {
-          draggable: true,
-          style: {
-            weight: 0.2,
-            fillOpacity: 0.9,
-            color: "black",
-            fillColor: "white",
-          },
-        }
-      ).addTo(map);
-    }
-    rescaled_path._layers[
-      Object.keys(rescaled_path._layers)
-    ]._path.classList.add(
-      "dragged_path_" +
-        rescaled_path._layers[Object.keys(rescaled_path._layers)].feature.id
+    rescale(path, scale);
+    rescaled_path._path.classList.add(
+      "dragged_path_" + rescaled_path.feature.id
     );
-    let bounds =
-      rescaled_path._layers[Object.keys(rescaled_path._layers)]._bounds;
+    let bounds = rescaled_path._bounds;
 
     let bounding_rectangle = L.rectangle(bounds, {
       color: "black",
-      weight: 1,
+      weight: 2,
       fill: false,
     }).addTo(map);
     bounding_rectangle._path.classList.add("dragged_rectangle_" + path_id);
     bind_drag(rescaled_path, false);
-    rescaled_path._layers[
-      Object.keys(rescaled_path._layers)
-    ]._path.classList.add("clicked");
+    rescaled_path._path.classList.add("clicked");
     clicked_path = rescaled_path;
-
-    rescaled_path.addEventListener("click", function () {
-      clicked_path = rescaled_path;
-      if (
-        Array.from(
-          rescaled_path._layers[Object.keys(rescaled_path._layers)]._path
-            .classList
-        ).includes("clicked")
-      ) {
-        rescaled_path._layers[
-          Object.keys(rescaled_path._layers)
-        ]._path.classList.remove("clicked");
-      } else {
-        map.eachLayer(function (path) {
-          if (path instanceof L.Path) {
-            if (Array.from(path._path.classList).includes("clicked")) {
-              path._path.classList.remove("clicked");
-            }
-          }
-        });
-        rescaled_path._layers[
-          Object.keys(rescaled_path._layers)
-        ]._path.classList.add("clicked");
-      }
-    });
+    set_clicked_path(rescaled_path);
   }
 
   geojsonLayer.eachLayer(function (path) {
@@ -239,33 +188,13 @@ function processData(data) {
             color: "black",
             fillColor: "orange",
           },
-        }).addTo(map);
+        })
+          .getLayers()[0]
+          .addTo(map);
+
         bind_drag(new_path, false);
         clicked_path = new_path;
-
-        new_path.addEventListener("click", function () {
-          clicked_path = new_path;
-          if (
-            Array.from(
-              new_path._layers[Object.keys(new_path._layers)]._path.classList
-            ).includes("clicked")
-          ) {
-            new_path._layers[
-              Object.keys(new_path._layers)
-            ]._path.classList.remove("clicked");
-          } else {
-            map.eachLayer(function (path) {
-              if (path instanceof L.Path) {
-                if (Array.from(path._path.classList).includes("clicked")) {
-                  path._path.classList.remove("clicked");
-                }
-              }
-            });
-            new_path._layers[Object.keys(new_path._layers)]._path.classList.add(
-              "clicked"
-            );
-          }
-        });
+        set_clicked_path(new_path);
       }
     });
   });
