@@ -20,6 +20,8 @@ console.log(map);
 var ctrlKeyPressed = false;
 var shiftKeyPressed = false;
 var clicked_path;
+var original_bounds;
+var contained_points = [];
 
 set_key_press();
 set_upload();
@@ -127,7 +129,7 @@ function add_data(data) {
       return L.marker(latlng, {
         icon: L.icon({
           iconUrl: "../img/marker-icon.svg", // Provide the path to your icon image
-          iconSize: [32, 32], // Set the icon size
+          iconSize: [50, 50], // Set the icon size
         }),
       });
     },
@@ -156,7 +158,7 @@ function add_data(data) {
 
   geojsonLayer.eachLayer(function (path) {
     path.on("click", function (event) {
-      if (ctrlKeyPressed) {
+      if (ctrlKeyPressed && path instanceof L.Path) {
         var new_path = L.geoJSON(this.toGeoJSON(), {
           draggable: true,
           style: {
@@ -181,7 +183,8 @@ function add_data(data) {
 //Bind events functions
 
 function rescale(layer, scale) {
-  var scale_factor;
+  var original_bounds = layer.getBounds();
+  var scale_factor = 0;
   if (scale == "in") {
     scale_factor = 1.1;
   } else {
@@ -200,6 +203,46 @@ function rescale(layer, scale) {
       },
     }
   ).addTo(map);
+
+  original_bounds = null;
+  contained_points = [];
+
+  original_bounds = layer.getBounds();
+  map.eachLayer(function (point) {
+    if (point instanceof L.Marker) {
+      let point_coord = point.getLatLng();
+
+      if (
+        turf.booleanPointInPolygon(
+          turf.point([point_coord.lng, point_coord.lat]),
+          layer.toGeoJSON()
+        )
+      ) {
+        let current_bound = layer.getBounds();
+        var bounds_shift = [
+          original_bounds._northEast.lat - current_bound._northEast.lat,
+          original_bounds._northEast.lng - current_bound._northEast.lng,
+        ];
+
+        let ptn = L.marker(
+          [
+            point._latlng.lat - bounds_shift[0],
+            point._latlng.lng - bounds_shift[1],
+          ],
+          {
+            icon: L.icon({
+              iconUrl: "../img/marker-icon.svg", // Provide the path to your icon image
+              iconSize: [40, 40], // Set the icon size
+            }),
+            dataAttribute: "test",
+          }
+        ).addTo(map);
+
+        ptn._icon.classList.add("dragged");
+        point.remove();
+      }
+    }
+  });
 
   layer.remove();
   return rescaled_coordinates;
@@ -223,7 +266,31 @@ function set_clicked_path(path) {
   });
 }
 
-function bind_drag(path, collection = false) {
+function bind_drag(path, collection = false, moved = false) {
+  path.on("dragstart", function () {
+    original_bounds = null;
+    contained_points = [];
+
+    original_bounds = path.getBounds();
+    map.eachLayer(function (point) {
+      if (point instanceof L.Marker) {
+        let point_coord = point.getLatLng();
+
+        if (
+          turf.booleanPointInPolygon(
+            turf.point([point_coord.lng, point_coord.lat]),
+            path.toGeoJSON()
+          )
+        ) {
+          if (point._icon.classList.contains("dragged")) {
+            point.remove();
+          }
+          contained_points.push(point);
+        }
+      }
+    });
+  });
+
   path.on("dragend", function (event) {
     this.setStyle({ fillColor: "white" });
     let flag = false;
@@ -251,6 +318,28 @@ function bind_drag(path, collection = false) {
     bouding_rectangle._path.classList.add(
       `dragged_rectangle_${path.feature.id}`
     );
+    let current_bound = path.getBounds();
+    var bounds_shift = [
+      original_bounds._northEast.lat - current_bound._northEast.lat,
+      original_bounds._northEast.lng - current_bound._northEast.lng,
+    ];
+
+    for (let point_to_move of contained_points) {
+      let ptn = L.marker(
+        [
+          point_to_move._latlng.lat - bounds_shift[0],
+          point_to_move._latlng.lng - bounds_shift[1],
+        ],
+        {
+          icon: L.icon({
+            iconUrl: "../img/marker-icon.svg", // Provide the path to your icon image
+            iconSize: [32, 32], // Set the icon size
+          }),
+          dataAttribute: "test",
+        }
+      ).addTo(map);
+      ptn._icon.classList.add("dragged");
+    }
   });
 }
 
@@ -294,7 +383,7 @@ function redraw_layer(path, scale) {
     fill: false,
   }).addTo(map);
   bounding_rectangle._path.classList.add("dragged_rectangle_" + path_id);
-  bind_drag(rescaled_path, false);
+  bind_drag(rescaled_path, false, true);
   rescaled_path._path.classList.add("clicked");
   clicked_path = rescaled_path;
   set_clicked_path(rescaled_path);
