@@ -227,9 +227,10 @@
   stroke: red;
   stroke-width: 2;
 } */
-path[class*="original_path"]:hover {
+[class*="original_path"]:hover {
   stroke: red;
   stroke-width: 2;
+  color: red;
 }
 path[class*="clicked"] {
   stroke: red;
