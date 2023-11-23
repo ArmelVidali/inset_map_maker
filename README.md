@@ -8,7 +8,11 @@ Click and drag a feature to create a bouding box around it, optionnaly resize th
 
 
 
-https://github.com/ArmelVidali/inset_map_maker/assets/84096571/f68fb006-651f-4e7a-b4c0-d329e2cea7da
+
+
+
+https://github.com/ArmelVidali/inset_map_maker/assets/84096571/015b6877-52f1-4777-bcb8-08a56a70cb65
+
 
 
 
