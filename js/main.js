@@ -1,6 +1,3 @@
-const turf = require("@turf/turf");
-const Swal = require("sweetalert2");
-
 ////// Map & tools intialisation ///////
 var map = L.map("map", { zoomControl: false }).setView(
   [46.603354, 1.888334],
@@ -82,6 +79,8 @@ function set_upload() {
 
 function set_download() {
   let fileInput = document.getElementById("file_input");
+  let geoJSONData = null; // Variable to store GeoJSON data
+
   fileInput.addEventListener("change", (event) => {
     const selectedFile = event.target.files[0];
 
@@ -89,13 +88,10 @@ function set_download() {
       const reader = new FileReader();
 
       reader.onload = (e) => {
-        const contents = e.target.result;
-        fileContents.textContent = contents;
+        geoJSONData = JSON.parse(e.target.result);
       };
 
       reader.readAsText(selectedFile);
-    } else {
-      fileContents.textContent = "No file selected.";
     }
   });
 
@@ -106,17 +102,49 @@ function set_download() {
       type: "FeatureCollection",
       features: [], // Initialize an empty array for features
     };
-    map.eachLayer(function (layer) {
-      if (layer instanceof L.Path) {
-        output_feat.features.push(layer.feature);
+    let i = 0;
+    map.eachLayer(function (path) {
+      if (path instanceof L.Path) {
+        if (path.feature != undefined) {
+          // check if the path was dragged. If yes, then update it's coordinates before downloading it
+          let includesDragged = Array.from(path._path.classList).some(function (
+            classname
+          ) {
+            return classname.includes("dragged");
+          });
+          //if the path was dragged
+          if (includesDragged) {
+            var coordinates = path.getLatLngs();
+
+            // Map over the coordinates and convert coordiantes objects to arrays
+            var transformedCoordinates = coordinates.map(function (array) {
+              return array.map(function (innerArray) {
+                return innerArray.map(function (coords) {
+                  return [coords.lng, coords.lat];
+                });
+              });
+            });
+            //actually repalce the coordinates
+            path.feature.geometry.coordinates = transformedCoordinates;
+          }
+
+          output_feat.features.push(path.feature);
+        } else {
+        }
       }
     });
+
+    // Merge loaded GeoJSON data with map features (if loaded)
+    if (geoJSONData) {
+      output_feat.features = output_feat.features.concat(geoJSONData.features);
+    }
+
     const jsonString = JSON.stringify(output_feat, null, 2);
     const blob = new Blob([jsonString], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "inset_map";
+    a.download = "inset_map.geojson"; // Use .geojson extension
     a.click();
     URL.revokeObjectURL(url);
   });
@@ -208,7 +236,7 @@ function rescale(layer, scale) {
 
   original_bounds = layer.getBounds();
   map.eachLayer(function (point) {
-    if (point instanceof L.Marker) {
+    if (point instanceof L.marker) {
       let point_coord = point.getLatLng();
 
       if (
@@ -265,32 +293,33 @@ function set_clicked_path(path) {
   });
 }
 
-function bind_drag(path, collection = false, moved = false) {
-  path.on("dragstart", function () {
-    original_bounds = null;
-    contained_points = [];
-
-    original_bounds = path.getBounds();
-    map.eachLayer(function (point) {
-      if (point instanceof L.Marker) {
-        let point_coord = point.getLatLng();
-
-        if (
-          turf.booleanPointInPolygon(
-            turf.point([point_coord.lng, point_coord.lat]),
-            path.toGeoJSON()
-          )
-        ) {
-          if (point._icon.classList.contains("dragged")) {
-            point.remove();
-          }
-          contained_points.push(point);
+function test(chemin) {
+  map.eachLayer(function (point) {
+    if (point instanceof L.Marker) {
+      if (turf.booleanPointInPolygon(point.toGeoJSON(), chemin.toGeoJSON())) {
+        contained_points.push(point);
+        if (point._icon.classList.contains("dragged")) {
+          point.remove();
         }
       }
-    });
+    }
+  });
+}
+
+function bind_drag(path, collection = false, moved = false) {
+  const path_id = path.feature.id;
+  var original_bounds;
+  var contained_points;
+
+  path.on("dragstart", function () {
+    contained_points = [];
+    original_bounds = null;
+    original_bounds = path.getBounds().getCenter();
+    test(path);
   });
 
   path.on("dragend", function (event) {
+    path.redraw();
     this.setStyle({ fillColor: "white" });
     let flag = false;
     var bounds = path._bounds;
@@ -301,11 +330,11 @@ function bind_drag(path, collection = false, moved = false) {
       }
     }
     if (flag == false) {
-      path._path.classList.add(`dragged_path_${path.feature.id}`);
+      path._path.classList.add(`dragged_path_${path_id}`);
     }
     try {
       let bouding_rectangle = document.querySelectorAll(
-        `[class*="dragged_rectangle_${path.feature.id}"]`
+        `[class*="dragged_rectangle_${path_id}"]`
       );
       bouding_rectangle[0].remove();
     } catch {}
@@ -314,13 +343,11 @@ function bind_drag(path, collection = false, moved = false) {
       weight: 2,
       fill: false,
     }).addTo(map);
-    bouding_rectangle._path.classList.add(
-      `dragged_rectangle_${path.feature.id}`
-    );
-    let current_bound = path.getBounds();
+    bouding_rectangle._path.classList.add(`dragged_rectangle_${path_id}`);
+    let current_bound = path.getBounds().getCenter();
     var bounds_shift = [
-      original_bounds._northEast.lat - current_bound._northEast.lat,
-      original_bounds._northEast.lng - current_bound._northEast.lng,
+      original_bounds.lat - current_bound.lat,
+      original_bounds.lng - current_bound.lng,
     ];
 
     for (let point_to_move of contained_points) {
@@ -329,15 +356,15 @@ function bind_drag(path, collection = false, moved = false) {
           point_to_move._latlng.lat - bounds_shift[0],
           point_to_move._latlng.lng - bounds_shift[1],
         ],
+
         {
           icon: L.icon({
             iconUrl: "../img/marker-icon.svg", // Provide the path to your icon image
             iconSize: [32, 32], // Set the icon size
           }),
-          dataAttribute: "test",
         }
       ).addTo(map);
-      ptn._icon.classList.add("dragged");
+      ptn._icon.classList.add(`dragged_point_${path_id}`);
     }
   });
 }
