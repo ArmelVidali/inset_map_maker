@@ -102,7 +102,6 @@ function set_download() {
       type: "FeatureCollection",
       features: [], // Initialize an empty array for features
     };
-    let i = 0;
     map.eachLayer(function (path) {
       if (path instanceof L.Path) {
         if (path.feature != undefined) {
@@ -119,17 +118,43 @@ function set_download() {
             // Map over the coordinates and convert coordiantes objects to arrays
             var transformedCoordinates = coordinates.map(function (array) {
               return array.map(function (innerArray) {
-                return innerArray.map(function (coords) {
-                  return [coords.lng, coords.lat];
-                });
+                if (Array.isArray(innerArray)) {
+                  return innerArray.map(function (coords) {
+                    return [coords.lng, coords.lat];
+                  });
+                } else {
+                  return [innerArray.lng, innerArray.lat];
+                }
               });
             });
             //actually repalce the coordinates
             path.feature.geometry.coordinates = transformedCoordinates;
+            let bounds = path._bounds;
+            var bounds_reactangle = {
+              type: "Feature",
+              style: {
+                fillColor: "none",
+                fillOpacity: 0,
+                strokeColor: "red",
+                strokeWeight: 2,
+              },
+              geometry: {
+                type: "Polygon",
+                coordinates: [
+                  [
+                    [bounds._southWest.lng, bounds._southWest.lat],
+                    [bounds._northEast.lng, bounds._southWest.lat],
+                    [bounds._northEast.lng, bounds._northEast.lat],
+                    [bounds._southWest.lng, bounds._northEast.lat],
+                    [bounds._southWest.lng, bounds._southWest.lat],
+                  ],
+                ],
+              },
+            };
+            output_feat.features.push(bounds_reactangle);
           }
 
           output_feat.features.push(path.feature);
-        } else {
         }
       }
     });
@@ -155,7 +180,7 @@ function add_data(data) {
     pointToLayer: function (feature, latlng) {
       return L.marker(latlng, {
         icon: L.icon({
-          iconUrl: "../img/marker-icon.svg", // Provide the path to your icon image
+          iconUrl: "../img/marker-icon.svg",
           iconSize: [50, 50], // Set the icon size
         }),
       });
