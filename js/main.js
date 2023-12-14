@@ -226,6 +226,21 @@ function add_data(data) {
         bind_drag(new_path, false);
         clicked_path = new_path;
         set_clicked_path(new_path);
+        // Removes a dragged shape and its bouding rectangle when Shift key engaged
+        new_path.on("click", () => {
+          if (shiftKeyPressed) {
+            let path_id = new_path.feature.id;
+            let bouding_rectangle = document.querySelectorAll(
+              `[class*="dragged_rectangle_${path_id}"]`
+            );
+            bouding_rectangle[0].remove();
+            new_path.remove();
+          }
+        });
+      }
+      // Remove a shape from the original dataset
+      else if (shiftKeyPressed && path instanceof L.Path) {
+        path.remove();
       }
     });
   });
@@ -318,10 +333,10 @@ function set_clicked_path(path) {
   });
 }
 
-function test(chemin) {
+function remove_path_and_points(path) {
   map.eachLayer(function (point) {
     if (point instanceof L.Marker) {
-      if (turf.booleanPointInPolygon(point.toGeoJSON(), chemin.toGeoJSON())) {
+      if (turf.booleanPointInPolygon(point.toGeoJSON(), path.toGeoJSON())) {
         contained_points.push(point);
         if (point._icon.classList.contains("dragged")) {
           point.remove();
@@ -340,7 +355,7 @@ function bind_drag(path, collection = false, moved = false) {
     contained_points = [];
     original_bounds = null;
     original_bounds = path.getBounds().getCenter();
-    test(path);
+    remove_path_and_points(path);
   });
 
   path.on("dragend", function (event) {
